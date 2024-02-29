@@ -1,30 +1,38 @@
 const axios = require("axios");
 
-const apiKey = "2a94ce58e056d75"; // not secrect
-const erpnextBaseUrl = "http://128.199.233.173:8000";
+const apiKey = "2a94ce58e056d75";
+const secretKey = "5479b211ceabbc1";
+const erpNextURL = "http://128.199.233.173:8000";
 
 const erpnextAuth = async (req, res, next) => {
   try {
-    // Set API key in request headers for authentication
-    axios.defaults.headers.common["Authorization"] = "Bearer " + apiKey;
+    const intent = req.body.queryResult.intent.displayName;
 
-    // // Extract lead information from Dialogflow request
-    // const { first_name, status, company_name } =
-    //   req.body.queryResult.parameters;
+    if (intent === "CreateLeadIntent") {
+      const leadData = {
+        doctype: "Lead",
+        first_name: req.body.queryResult.parameters.first_name,
+        company_name: req.body.queryResult.parameters.company_name,
+        status: req.body.queryResult.parameters.status,
+      };
 
-    // // Make a request to ERPNext API to create a new lead
-    // await axios.post(erpnextBaseUrl + "/api/resource/Lead", {
-    //   data: {
-    //     first_name,
-    //     status,
-    //     company_name,
-    //   },
-    // });
+      const response = await axios.post(erpNextURL, leadData, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}:${secretKey}`,
+        },
+      });
 
-    // Continue with the next middleware or route handler
-    next();
+      return res.json({
+        fulfillmentText: `Lead created successfully. Lead ID: ${response.data.data.name}`,
+      });
+    } else {
+      return res.json({
+        fulfillmentText: "Unhandled intent",
+      });
+    }
   } catch (error) {
-    console.error("Error connecting to ERPNext:", error.message);
+    console.error(error);
     res.status(500).send("Internal Server Error");
   }
 };
