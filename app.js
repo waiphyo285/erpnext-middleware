@@ -6,8 +6,6 @@ const { erpnextAuth } = require("./middlewares/erpnext-auth");
 const app = express();
 const port = 3000;
 
-app.use(erpnextAuth);
-
 // Define a simple route
 app.get("/", (req, res) => {
   res.send("Hello, Express!");
